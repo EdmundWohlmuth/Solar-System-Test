@@ -7,8 +7,16 @@ public class CelestialBody : MonoBehaviour
     const float G = 667.4f;
 
     public Rigidbody rb;
+    [Header("Orbital info")]
     public float density;
+    public float orbitRadius;
+    public float orbitTime;
 
+    [Header("fun facts")]
+    public float velocity;
+    public float orbitalDistance;
+
+    [Header("Bools")]
     public bool randomDensity;
     public bool isSun;
 
@@ -28,6 +36,7 @@ public class CelestialBody : MonoBehaviour
         volume = (4/3) * Mathf.PI * radiusCubed;
 
         rb.mass = density * volume;
+        SetVelocity();
     }
 
     void FixedUpdate()
@@ -35,7 +44,7 @@ public class CelestialBody : MonoBehaviour
         CelestialBody[] Bodies = FindObjectsOfType<CelestialBody>();
         foreach (CelestialBody body in Bodies)
         {
-            if (body != this)
+            if (body != this) // to stop body from calcualting is gravitational affect on itself
             {
                 Gravity(body);
             }
@@ -46,13 +55,14 @@ public class CelestialBody : MonoBehaviour
     {
         Rigidbody rbToAttact = objToAttract.rb;
 
-        Vector3 direction = rb.position - rbToAttact.position;
+        Vector3 direction = rb.position - rbToAttact.position; // find direction to celectial body
         float distance = direction.magnitude;
+        orbitalDistance = distance; // distance to the sun
 
-        float forceMagnitude = G * (rb.mass * rbToAttact.mass) / Mathf.Pow(distance, 2);
+        float forceMagnitude = G * (rb.mass * rbToAttact.mass) / Mathf.Pow(distance, 2); // calculate gravitational force
         Vector3 force = direction.normalized * forceMagnitude;
 
-        rbToAttact.AddForce(force);
+        rbToAttact.AddForce(force); // apply gravity
     }
 
     void SetVelocity()
@@ -62,12 +72,17 @@ public class CelestialBody : MonoBehaviour
             GameObject sun = GameObject.Find("Sun");
             Rigidbody sunPos = sun.GetComponent<Rigidbody>();
 
-            Vector3 direction = rb.position - sunPos.position;
-            float distance = direction.magnitude;
+            Vector3 sunDirection = rb.position - sunPos.position; // distacne to the sun
+            float distance = sunDirection.magnitude;
 
-            float velocity = Mathf.Sqrt((G * rb.mass) / distance);
-            Vector3 force = direction.normalized * velocity;
-            rb.AddForce(force);
+            //velocity = (2 * (Mathf.PI) * distance) / orbitTime; // lucas code
+
+            velocity = Mathf.Sqrt((G * (sunPos.mass * rb.mass)) / distance); // circular orbit
+            velocity = velocity * 400;
+
+            Vector3 force = new Vector3(velocity, 0, 0); // sets direction
+
+            rb.AddForce(force); // apply orital velocity
         }
     }
 }
