@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class CelestialBody : MonoBehaviour
 {
-    const float G = 667.4f;
+    const float G = 6.674f;
 
     public Rigidbody rb;
     [Header("Orbital info")]
@@ -13,7 +13,7 @@ public class CelestialBody : MonoBehaviour
     public float orbitTime;
 
     [Header("fun facts")]
-    public float velocity;
+    public float force;
     public float orbitalDistance;
 
     [Header("Bools")]
@@ -75,14 +75,23 @@ public class CelestialBody : MonoBehaviour
             Vector3 sunDirection = rb.position - sunPos.position; // distacne to the sun
             float distance = sunDirection.magnitude;
 
-            //velocity = (2 * (Mathf.PI) * distance) / orbitTime; // lucas code
+            //velocity = (2 * (Mathf.PI) * distance) / orbitTime; // lucas calculation
 
-            velocity = Mathf.Sqrt((G * (sunPos.mass * rb.mass)) / distance); // circular orbit
-            velocity = velocity * 400;
+            force = Mathf.Sqrt((G * (sunPos.mass * rb.mass)) / distance); // circular orbit
+            force = force * 400;
 
-            Vector3 force = new Vector3(velocity, 0, 0); // sets direction
+            float angleToSun = Vector3.Angle(transform.position, sun.transform.position);
+            Debug.Log(gameObject + "angle to sun" + angleToSun);
 
-            rb.AddForce(force); // apply orital velocity
+            AddForceAtAngle(force, angleToSun);
         }
+    }
+
+    void AddForceAtAngle(float force, float angle)
+    {
+        float x = Mathf.Cos(angle * Mathf.PI / 180) * force;
+        float y = Mathf.Sin(angle * Mathf.PI / 180) * force;
+
+        rb.AddForce(y, 0, x);
     }
 }
