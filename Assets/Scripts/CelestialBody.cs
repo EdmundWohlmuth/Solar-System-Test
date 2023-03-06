@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class CelestialBody : MonoBehaviour
 {
-    const float G = 667.4f;
+    const float G = 66.74f;
 
     public Rigidbody rb;
     [Header("Orbital info")]
@@ -15,6 +15,7 @@ public class CelestialBody : MonoBehaviour
     [Header("fun facts")]
     public float force;
     public float orbitalDistance;
+    [SerializeField] float gravitationalForce;
 
     [Header("Bools")]
     public bool randomDensity;
@@ -24,7 +25,7 @@ public class CelestialBody : MonoBehaviour
     {
         if (randomDensity)
         {
-            density = Random.Range(0.01f, 0.1f); // TEMP
+            density = Random.Range(10f, 40f); // TEMP
         }
 
         float radius;
@@ -63,6 +64,7 @@ public class CelestialBody : MonoBehaviour
         Vector3 force = direction.normalized * forceMagnitude;
 
         rbToAttact.AddForce(force); // apply gravity
+        gravitationalForce = forceMagnitude;
     }
 
     void SetVelocity()
@@ -72,16 +74,17 @@ public class CelestialBody : MonoBehaviour
             GameObject sun = GameObject.Find("Sun");
             Rigidbody sunPos = sun.GetComponent<Rigidbody>();
 
-            Vector3 sunDirection = rb.position - sunPos.position; // distacne to the sun
-            float distance = sunDirection.magnitude;
+            //Vector3 sunDirection = rb.position - sunPos.position; // distacne to the sun
+            float distance = Vector3.Distance(gameObject.transform.position, sun.transform.position);
 
             force = (G * rb.mass) * (sunPos.mass) / distance;
-            force = Mathf.Sqrt(force) * 400;           
+            force = Mathf.Sqrt(force) * 200;           
 
             float angleToSun = Vector3.Angle(transform.position, sun.transform.position);
             //Debug.Log(gameObject + "angle to sun" + angleToSun);
 
-            AddForceAtAngle(force, angleToSun);
+            //AddForceAtAngle(force, angleToSun);
+            AddForceForCircularOrbit(distance);
         }
     }
 
@@ -91,5 +94,46 @@ public class CelestialBody : MonoBehaviour
         float y = Mathf.Sin(angle * Mathf.PI / 180) * force;
 
         rb.AddForce(y, 0, x);
+    }
+
+    void AddForceForCircularOrbit(float radius)
+    {
+        GameObject sun = GameObject.Find("Sun");
+        Rigidbody sunPos = sun.GetComponent<Rigidbody>();
+
+        Vector3 direction = (transform.position - sun.transform.position).normalized;
+        Vector3 perpendicular = new Vector3(direction.y, -direction.x, 0);
+        float speed = Mathf.Sqrt(G * sunPos.mass / radius);
+        Vector3 velocity = perpendicular * speed;
+
+        rb.velocity = velocity;
+        /*Debug.Log(gameObject.name + " Perpendicular: " + perpendicular);
+        Debug.Log(gameObject.name + " Speed: " + speed);
+        Debug.Log(gameObject.name + " Velocity: " + velocity);
+        Debug.Log(" ");*/
+    }
+
+    private void OnCollisionEnter(Collision collision)
+    {
+        if (gameObject.tag != "sun")
+        {
+            if (collision.gameObject.tag == "sun")
+            {
+                if (gameObject.GetComponent<Rigidbody>().mass > 0.05f) Debug.LogWarning(gameObject.name + "collided with the sun!");
+                Destroy(gameObject);
+            }
+            else
+            {
+                // add mass and destory if smaller object
+                if (collision.gameObject.GetComponent<Rigidbody>().mass >= gameObject.GetComponent<Rigidbody>().mass)
+                {
+                    collision.gameObject.GetComponent<Rigidbody>().mass += gameObject.GetComponent<Rigidbody>().mass;
+                    collision.gameObject.transform.localScale += (gameObject.transform.localScale / 0.6f);
+                    collision.gameObject.GetComponent<CelestialBody>().density += gameObject.GetComponent<CelestialBody>().density;
+                    Destroy(gameObject);
+                }
+                Debug.LogWarning(gameObject.name + " collided with " + collision.gameObject.name + "!");
+            }
+        }
     }
 }
