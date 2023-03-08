@@ -4,13 +4,13 @@ using UnityEngine;
 
 public class CelestialBody : MonoBehaviour
 {
-    const float G = 66.74f;
+    const float G = 6.674f;
 
     public Rigidbody rb;
     [Header("Orbital info")]
     public float density;
-    public float orbitRadius;
-    public float orbitTime;
+    public float periapsis;
+    public float apoapsis;
 
     [Header("fun facts")]
     public float force;
@@ -21,27 +21,40 @@ public class CelestialBody : MonoBehaviour
     public bool randomDensity;
     public bool isSun;
 
+    [Header("Textures")]
+    public Material asteroid;
+    public Material dwarfPlanet;
+    public Material terrestrial;
+    public Material jovian;
+    public Material star;
+
     private void Start()
     {
         if (randomDensity)
         {
-            density = Random.Range(10f, 40f); // TEMP
+            density = Random.Range(0.01f, 0.1f); // TEMP
         }
+        CalculateVolume();
+        SetVelocity();
+    }
 
+    void CalculateVolume()
+    {
         float radius;
         float radiusCubed;
         float volume;
 
         radius = transform.localScale.x / 2;
         radiusCubed = Mathf.Pow(radius, 3);
-        volume = (4/3) * Mathf.PI * radiusCubed;
+        volume = (4 / 3) * Mathf.PI * radiusCubed;
 
         rb.mass = density * volume;
-        SetVelocity();
     }
 
     void FixedUpdate()
     {
+        CalculateVolume();
+
         CelestialBody[] Bodies = FindObjectsOfType<CelestialBody>();
         foreach (CelestialBody body in Bodies)
         {
@@ -50,6 +63,8 @@ public class CelestialBody : MonoBehaviour
                 Gravity(body);
             }
         }
+
+        Classification();
     }
 
     void Gravity(CelestialBody objToAttract)
@@ -119,7 +134,7 @@ public class CelestialBody : MonoBehaviour
         {
             if (collision.gameObject.tag == "sun")
             {
-                if (gameObject.GetComponent<Rigidbody>().mass > 0.05f) Debug.LogWarning(gameObject.name + "collided with the sun!");
+                if (gameObject.GetComponent<Rigidbody>().mass > 0.05f) Debug.LogError(gameObject.name + "collided with the sun!");
                 Destroy(gameObject);
             }
             else
@@ -128,12 +143,34 @@ public class CelestialBody : MonoBehaviour
                 if (collision.gameObject.GetComponent<Rigidbody>().mass >= gameObject.GetComponent<Rigidbody>().mass)
                 {
                     collision.gameObject.GetComponent<Rigidbody>().mass += gameObject.GetComponent<Rigidbody>().mass;
-                    collision.gameObject.transform.localScale += (gameObject.transform.localScale / 0.6f);
-                    collision.gameObject.GetComponent<CelestialBody>().density += gameObject.GetComponent<CelestialBody>().density;
+                    collision.gameObject.transform.localScale += (gameObject.transform.localScale / 2.5f);
+                    collision.gameObject.GetComponent<CelestialBody>().density += (gameObject.GetComponent<CelestialBody>().density / 2.5f);
                     Destroy(gameObject);
                 }
                 Debug.LogWarning(gameObject.name + " collided with " + collision.gameObject.name + "!");
             }
+        }
+    }
+
+    void Classification()
+    {
+        if (rb.mass > 800)
+        {
+            gameObject.GetComponent<Renderer>().material = star;
+            isSun = true;
+
+        }
+        else if (rb.mass > 500)
+        {
+
+        }
+        else if (rb.mass > 250)
+        {
+
+        }
+        else if (rb.mass > 100)
+        {
+
         }
     }
 }

@@ -12,10 +12,11 @@ public class AsteroidGen : MonoBehaviour
     {
         for (int i = 0; i < debriesAmmount; i++)
         {
-            Vector3 startPos = new Vector3(Random.Range(-100, 100), Random.Range(-10, 10), Random.Range(-100, 100));
+            Vector3 startPos = new Vector3(Random.Range(-100, 100), Random.Range(-10, 10), Random.Range(-110, 110));
 
             GameObject Planetoid = Instantiate(debris, debris.transform.position = startPos, debris.transform.rotation);
             Planetoid.name = "Planetoid" + " " + i.ToString();
+            Planetoid.transform.parent = gameObject.transform;
         }
     }
 
